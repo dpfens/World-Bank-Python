@@ -1,5 +1,6 @@
-# WorldBank API
-See World Bank [Developer Information](https://datahelpdesk.worldbank.org/knowledgebase/topics/125589-developer-information) to get information on the authoritative API
+# World Bank API
+A Python 2/3 wrapper for the World Bank API
+See World Bank [Developer Information](https://datahelpdesk.worldbank.org/knowledgebase/topics/125589-developer-information) to get information on the raw API
 
 ## Classes
 Classes are used to store the data returned by the API and the `classmethods` and Instance Methods are used to fetch data from the API
@@ -18,7 +19,7 @@ Classes are used to store the data returned by the API and the `classmethods` an
 
 
 ### Catalog
-See WorldBank Catalog API See [WorldBank Catalog API](https://datahelpdesk.worldbank.org/knowledgebase/articles/902049-data-catalog-api)
+See World Bank Catalog API See [World Bank Catalog API](https://datahelpdesk.worldbank.org/knowledgebase/articles/902049-data-catalog-api)
 
 ### City
 A city in a [country](#country). A `country's` `capital` is a City instance
@@ -31,7 +32,7 @@ A city in a [country](#country). A `country's` `capital` is a City instance
 - get(page=1, per_page=50]
 
 ### Country
-A country existing in the WorldBank database
+A country existing in the World Bank database
 - id
 - name
 - iso_code
@@ -49,7 +50,7 @@ A country existing in the WorldBank database
 - by_lending_type(lending_type]
     - Returns [Countries](#country) that all have a given [LendingType](#lendingtype)
 
-See the [WorldBank Country API](https://datahelpdesk.worldbank.org/knowledgebase/articles/898590-api-country-queries) for more details
+See the [World Bank Country API](https://datahelpdesk.worldbank.org/knowledgebase/articles/898590-api-country-queries) for more details
 
 ### CountryIndicator
 A measure of an [Indicator](#indicator) for a given country for a given year
@@ -68,7 +69,7 @@ A measure of an [Indicator](#indicator) for a given country for a given year
     - Returns instances of `CountryIndicator` for a given [Indicator](#indicator).  If a `start` year and `end` year are provided, returns `CountryIndicators` where `start` >= year <= `end`.
     - If a country is provided, only returns `CountryIndicators` for the given country. If a country is not provided, returns `CountryIndicators` for the [Indicator](#indicator) for all countries.
 
-See the [WorldBank Indicator API](See https://datahelpdesk.worldbank.org/knowledgebase/articles/898599-api-indicator-queries) for more details
+See the [World Bank Indicator API](See https://datahelpdesk.worldbank.org/knowledgebase/articles/898599-api-indicator-queries) for more details
 
 
 ### IncomeLevel
@@ -82,7 +83,7 @@ Income levels show the income category of a particular country as identified by 
 - get(page=1, per_page=50]
     - Returns a list of all [IncomeLevels](#incomelevel)
 
-See the [WorldBank Income Level API](https://datahelpdesk.worldbank.org/knowledgebase/articles/898596-api-income-level-queries) for more details.
+See the [World Bank Income Level API](https://datahelpdesk.worldbank.org/knowledgebase/articles/898596-api-income-level-queries) for more details.
 
 ### Indicator
 
@@ -102,7 +103,7 @@ See the [WorldBank Income Level API](https://datahelpdesk.worldbank.org/knowledg
 - by_topic(topic]
     - Returns [Indicators](#indicator) that all have a given [Topic](#topic)
 
-See the [WorldBank Indicator API](https://datahelpdesk.worldbank.org/knowledgebase/articles/898599-api-indicator-queries) for more details.
+See the [World Bank Indicator API](https://datahelpdesk.worldbank.org/knowledgebase/articles/898599-api-indicator-queries) for more details.
 
 ### LendingType
 The World Bank classified countries according to the type of lending they are eligible for through the World Bank.  For more information see the [World Bank Country and Lending Groups](https://datahelpdesk.worldbank.org/knowledgebase/articles/906519-world-bank-country-and-lending-groups) page.
@@ -115,7 +116,7 @@ The World Bank classified countries according to the type of lending they are el
 - get(page=1, per_page=50]
     - Returns a list of all [LendingTypes](#lendingtypes)
 
-See the [WorldBank Lending Type API](https://datahelpdesk.worldbank.org/knowledgebase/articles/898608-api-lending-type-queries) for more details
+See the [World Bank Lending Type API](https://datahelpdesk.worldbank.org/knowledgebase/articles/898608-api-lending-type-queries) for more details
 
 ### Region
 
@@ -142,7 +143,7 @@ An organization that provides data as [CountryIndicators](#countryindicator) for
 - get(page=1, per_page=50]
     - Returns a list of all [Sources](#source)
 
-See the [WorldBank Source API](https://datahelpdesk.worldbank.org/knowledgebase/articles/898587-api-catalog-source-queries) for more details
+See the [World Bank Source API](https://datahelpdesk.worldbank.org/knowledgebase/articles/898587-api-catalog-source-queries) for more details
 
 ### Topic
 A high-level category that all [Indicators](#indicator) are mapped to
@@ -156,4 +157,4 @@ A high-level category that all [Indicators](#indicator) are mapped to
 - get(page=1, per_page=50]
     - Returns a list of all [Topics](#topic)
 
-See the [WorldBank Topic API](https://datahelpdesk.worldbank.org/knowledgebase/articles/898611-api-topic-queries) for more details
+See the [World Bank Topic API](https://datahelpdesk.worldbank.org/knowledgebase/articles/898611-api-topic-queries) for more details
