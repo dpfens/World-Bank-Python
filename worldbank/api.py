@@ -50,15 +50,15 @@ def _request(url, **kwargs):
         request.add_data(key, value)
 
     try:
+        logger.debug('opening %s request', url)
         response = urlopen(request)
-        logger.debug(response.geturl())
+        logger.debug('completed %s request', response.geturl())
     except Exception as e:
         request_url = response.geturl()
         response_code = response.getcode()
-        error_message = error_message
         logger.error(
             '%s Code: %s - %s',
-            request_url, response_code, error_message
+            request_url, response_code, e
         )
         raise
     raw_response_data = response.read().decode("utf-8")
