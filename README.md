@@ -19,11 +19,17 @@ Classes are used to store the data returned by the API and the `classmethods` an
 
 
 ### Catalog
-See World Bank Catalog API See [World Bank Catalog API](https://datahelpdesk.worldbank.org/knowledgebase/articles/902049-data-catalog-api)
+The Data Catalog API provides programmatic access to the list of datasets in the [World Bank’s Open Data Catalog](https://data.worldbank.org/data-catalog/) with associated metadata.  Each metatype returned is added to the instance as an attribute.
+
+#### Instance Attributes
+- id
+
+See [World Bank Catalog API](https://datahelpdesk.worldbank.org/knowledgebase/articles/902049-data-catalog-api)
 
 ### City
 A city in a [country](#country). A `country's` `capital` is a City instance
 
+#### Instance Attributes
 - name
 - latitude
 - longitude
@@ -33,6 +39,8 @@ A city in a [country](#country). A `country's` `capital` is a City instance
 
 ### Country
 A country existing in the World Bank database
+
+#### Instance Attributes
 - id
 - name
 - iso_code
