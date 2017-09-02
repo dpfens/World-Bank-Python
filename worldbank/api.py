@@ -36,13 +36,12 @@ def _request(url, **kwargs):
     parameters = kwargs.get('parameters', {})
     data = kwargs.get('data', {})
 
-    parameters.setdefault('format', 'json')
+    parameters['format'] = 'json'
 
     encoded_parameters = urlencode(parameters)
     if encoded_parameters:
         url = '%s?%s' % (url, encoded_parameters)
 
-    logger.debug(url)
     request = Request(url)
     for key, value in headers.items():
         request.add_header(key, value)
@@ -52,10 +51,15 @@ def _request(url, **kwargs):
 
     try:
         response = urlopen(request)
+        logger.debug(response.geturl())
     except Exception as e:
+        request_url = response.geturl()
         response_code = response.getcode()
         error_message = error_message
-        logger.error('%s Code: %s - %s', url, response_code, error_message)
+        logger.error(
+            '%s Code: %s - %s',
+            request_url, response_code, error_message
+        )
         raise
     raw_response_data = response.read().decode("utf-8")
     response_data = json.loads(raw_response_data)
