@@ -1,6 +1,7 @@
 """
-A Python wrapper for the WorldBank API
+A Python wrapper for the WorldBank API (See: https://datahelpdesk.worldbank.org/knowledgebase/topics/125589-developer-information)
 """
+
 from __future__ import unicode_literals
 from __future__ import print_function
 import logging
@@ -18,10 +19,8 @@ except:
 
 logger = logging.getLogger(__name__)
 
-
 def memoize(obj):
     cache = obj.cache = {}
-
     @functools.wraps(obj)
     def memoizer(*args, **kwargs):
         key = str(args) + str(kwargs)
@@ -30,18 +29,18 @@ def memoize(obj):
         return cache[key]
     return memoizer
 
-
 def _request(url, **kwargs):
     headers = kwargs.get('headers', {})
     parameters = kwargs.get('parameters', {})
     data = kwargs.get('data', {})
 
-    parameters['format'] = 'json'
+    parameters.setdefault('format', 'json')
 
     encoded_parameters = urlencode(parameters)
     if encoded_parameters:
         url = '%s?%s' % (url, encoded_parameters)
 
+    logger.debug(url)
     request = Request(url)
     for key, value in headers.items():
         request.add_header(key, value)
@@ -50,25 +49,22 @@ def _request(url, **kwargs):
         request.add_data(key, value)
 
     try:
-        logger.debug('opening %s request', url)
         response = urlopen(request)
-        logger.debug('completed %s request', response.geturl())
     except Exception as e:
-        request_url = response.geturl()
-        response_code = response.getcode()
-        logger.error(
-            '%s Code: %s - %s',
-            request_url, response_code, e
-        )
+        logger.error(e)
         raise
     raw_response_data = response.read().decode("utf-8")
     response_data = json.loads(raw_response_data)
     return response_data
 
-domain = "https://api.worldbank.org"
-
+domain = "https://api.worldbank.org/v2"
 
 class Source(object):
+    """
+    Sources of information for WorldBank data
+
+    See https://datahelpdesk.worldbank.org/knowledgebase/articles/898587-api-catalog-source-queries
+    """
     __slots__ = ('id', 'name', 'description', 'url')
 
     def __init__(self, id, name, description, url):
@@ -81,8 +77,7 @@ class Source(object):
         return self.id
 
     def __repr__(self):
-        return '<%s %s id=%s, name=%s, url=%r>' % \
-            (self.__class__.__name__, id(self), self.id, self.name, self.url)
+        return '<%s %s id=%s, name=%s, url=%r>' % (self.__class__.__name__, id(self), self.id, self.name, self.url)
 
     @classmethod
     def from_api(cls, data):
@@ -99,15 +94,18 @@ class Source(object):
     @classmethod
     def get(cls, **kwargs):
         """
-        Returns a list of class instances
+        Returns a tuple of a dictionary summary, and a list of class instances
         """
         url = '%s/sources' % domain
         summary, data = _request(url, parameters=kwargs)
         instances = [cls.from_api(item) for item in data]
-        return instances
-
+        return summary, instances
 
 class IncomeLevel(object):
+    """
+
+    See https://datahelpdesk.worldbank.org/knowledgebase/articles/898596-api-income-level-queries
+    """
     __slots__ = ('id', 'name')
 
     def __init__(self, id, name):
@@ -118,8 +116,7 @@ class IncomeLevel(object):
         return self.id
 
     def __repr__(self):
-        return '<%s %s id=%s, name=%s>' % \
-            (self.__class__.__name__, id(self), self.id, self.name)
+        return '<%s %s id=%s, code=%s, name=%s>' % (self.__class__.__name__, id(self), self.id, self.code, self.name)
 
     @classmethod
     def from_api(cls, data):
@@ -133,15 +130,18 @@ class IncomeLevel(object):
     @classmethod
     def get(cls, **kwargs):
         """
-        Returns a list of class instances
+        Returns a tuple of a dictionary summary, and a list of class instances
         """
         url = '%s/incomeLevels' % domain
         summary, data = _request(url, parameters=kwargs)
         instances = [cls.from_api(item) for item in data]
-        return instances
-
+        return summary, instances
 
 class LendingType(object):
+    """
+
+    See https://datahelpdesk.worldbank.org/knowledgebase/articles/898608-api-lending-type-queries
+    """
     __slots__ = ('id', 'name')
 
     def __init__(self, id, name):
@@ -152,8 +152,7 @@ class LendingType(object):
         return self.id
 
     def __repr__(self):
-        return '<%s %s id=%s, name=%s>' % \
-            (self.__class__.__name__, id(self), self.id, self.name)
+        return '<%s %s id=%s, name=%s>' % (self.__class__.__name__, id(self), self.id, self.name)
 
     @classmethod
     def from_api(cls, data):
@@ -167,22 +166,22 @@ class LendingType(object):
     @classmethod
     def get(cls, **kwargs):
         """
-        Returns a list of class instances
+        Returns a tuple of a dictionary summary, and a list of class instances
         """
         url = '%s/lendingTypes' % domain
         summary, data = _request(url, parameters=kwargs)
         instances = [cls.from_api(item) for item in data]
-        return instances
-
+        return summary, instances
 
 class Indicator(object):
-    __slots__ = (
-        'id', 'name', 'source', 'topics', 'source_note', 'source_organization'
-    )
+    """
+    An Indicator is dimension that can be measured for a country
 
-    def __init__(
-        self, id, name, source, topics, source_note, source_organization
-    ):
+    See https://datahelpdesk.worldbank.org/knowledgebase/articles/898599-api-indicator-queries
+    """
+    __slots__ = ('id', 'name', 'source', 'topics', 'source_note', 'source_organization')
+
+    def __init__(self, id, name, source, topics, source_note, source_organization):
         self.id = id
         self.name = name
         self.source = source
@@ -194,11 +193,7 @@ class Indicator(object):
         return self.id
 
     def __repr__(self):
-        return '<%s %s id=%s, name=%s, source_organization=%s>' % \
-            (
-                self.__class__.__name__, id(self),
-                self.id, self.name, self.source_organization
-            )
+        return '<%s %s id=%s, name=%s, source_organization=%s>' % (self.__class__.__name__, id(self), self.id, self.name, self.source_organization)
 
     @classmethod
     def from_api(cls, data):
@@ -210,22 +205,19 @@ class Indicator(object):
         source_data = data.get('source', None)
         topic_data = data.get('topics', [])
         source_note = data.get('sourceNote', None)
-        source_organization = data.get('sourceOrganization', None)
-        source_organization = source_organization.encode('ascii', 'ignore')
+        source_organization = data.get('sourceOrganization', None).encode('ascii', 'ignore')
         source = Source.from_api(source_data)
         if topic_data and 'id' in topic_data:
             topics = [Topic.from_api(topic) for topic in topic_data]
         else:
             topics = []
-        return cls(
-            indicator_id, name, source,
-            topics, source_note, source_organization
-        )
+        return cls(indicator_id, name, source, topics, source_note, source_organization)
 
     @classmethod
+    @memoize
     def get(cls, indicator_id=None, **kwargs):
         """
-        Returns a list of class instances
+        Returns a tuple of a dictionary summary, and a list of class instances
         """
         if indicator_id:
             url = '%s/indicators/%s' % (domain, indicator_id)
@@ -233,34 +225,39 @@ class Indicator(object):
             url = '%s/indicators' % domain
         summary, data = _request(url, parameters=kwargs)
         instances = [cls.from_api(item) for item in data]
-        return instances
+        return summary, instances
 
     @classmethod
     def by_source(cls, source, **kwargs):
         """
-        Returns a list of class instances with a given source
+        Returns a tuple of a dictionary summary, and a list of class instances with a given source
         """
         url = '%s/source/%s/indicator' % (domain, source.id)
         summary, data = _request(url, parameters=kwargs)
         instances = [cls.from_api(item) for item in data]
-        return instances
+        return summary, instances
 
     @classmethod
     def by_topic(cls, topic, **kwargs):
         """
-        Returns a list of class instances with a given topic
+        Returns a tuple of a dictionary summary, and a list of class instances with a given topic
         """
         url = '%s/topic/%s/indicator' % (domain, topic.id)
         summary, data = _request(url, parameters=kwargs)
         instances = [cls.from_api(item) for item in data]
-        return instances
-
+        return summary, instances
 
 class Region(object):
-    __slots__ = ('id', 'name')
+    """
+    A region is a property of a Country
 
-    def __init__(self, id, name):
+    See https://datahelpdesk.worldbank.org/knowledgebase/articles/898590-api-country-queries
+    """
+    __slots__ = ('id', 'code', 'name')
+
+    def __init__(self, id, code, name):
         self.id = id
+        self.code = code
         self.name = name
 
     def __str__(self):
@@ -274,16 +271,28 @@ class Region(object):
         """
         Returns a class instance from API data
         """
-        lending_type_id = data['id']
+        id = data['id']
+        code = data['iso2code']
         name = data['value']
-        return cls(lending_type_id, name)
-
+        return cls(id, code, name)
 
 class AdminRegion(Region):
-    __slots__ = ('id', 'name')
+    """
+    An admin region is a property of a Country
+
+    See https://datahelpdesk.worldbank.org/knowledgebase/articles/898590-api-country-queries
+    """
+
+    __slots__ = ('id', 'code', 'name')
 
 
 class City(object):
+    """
+    A city is a property of a Country
+    ex. country.capital # <City instance>
+
+    See https://datahelpdesk.worldbank.org/knowledgebase/articles/898590-api-country-queries
+    """
     __slots__ = ('name', 'latitude', 'longitude')
 
     def __init__(self, name, latitude, longitude):
@@ -295,7 +304,7 @@ class City(object):
         return self.name
 
     def __repr__(self):
-        return '<%s %s %s>' % (self.__class__.__name__, id(self), self.name)
+        return '<%s %s %s latitude=%s, longitude=%s>' % (self.__class__.__name__, id(self), self.name, self.latitude, self.longitude)
 
     @classmethod
     def from_api(cls, data):
@@ -307,17 +316,15 @@ class City(object):
         longitude = data['longitude']
         return cls(name, latitude, longitude)
 
-
 class Country(object):
-    __slots__ = (
-        'id', 'name', 'iso_code', 'region',
-        'admin_region', 'income_level', 'lending_type', 'capital'
-        )
+    """
+    A country
 
-    def __init__(
-        self, id, name, iso_code, region,
-        admin_region, income_level, lending_type, capital
-    ):
+    See https://datahelpdesk.worldbank.org/knowledgebase/articles/898590-api-country-queries
+    """
+    __slots__ = ('id', 'name', 'iso_code', 'region', 'admin_region', 'income_level', 'lending_type', 'capital')
+
+    def __init__(self, id, name, iso_code, region, admin_region, income_level, lending_type, capital):
         self.id = id
         self.name = name
         self.iso_code = iso_code
@@ -331,9 +338,7 @@ class Country(object):
         return self.id
 
     def __repr__(self):
-        return '<%s %s id=%s, iso_code=%s, name=%s, region=%s, capital=%s>' % \
-            (self.__class__.__name__, id(self), self.id,
-                self.iso_code, self.name, self.region, self.capital)
+        return '<%s %s id=%s, iso_code=%s, name=%s, region=%s, capital=%s>' % (self.__class__.__name__, id(self), self.id, self.iso_code, self.name, self.region, self.capital)
 
     @classmethod
     def from_api(cls, data):
@@ -342,7 +347,7 @@ class Country(object):
         """
         country_id = data['id']
         name = data['name']
-        iso_code = data.get('iso2code', None)
+        iso_code = data.get('iso2Code', None)
         region_data = data.get('region', None)
         admin_region_data = data.get('adminregion', None)
         income_level_data = data.get('incomeLevel', None)
@@ -355,47 +360,48 @@ class Country(object):
         income_level = IncomeLevel.from_api(income_level_data)
         lending_type = LendingType.from_api(lending_type_data)
         capital = City(capital_city, latitude, longitude)
-        return cls(
-            country_id, name, iso_code, region, admin_region,
-            income_level, lending_type, capital
-        )
+        return cls(country_id, name, iso_code, region, admin_region, income_level, lending_type, capital)
 
     @classmethod
     def get(cls, iso_code=None, **kwargs):
         """
-        Returns a list of class instances
+        Returns a tuple of a dictionary summary, and a list of class instances
         """
         url = '%s/countries' % domain
         if iso_code:
             url = '%s/%s' % (url, iso_code)
         summary, data = _request(url, parameters=kwargs)
         instances = [cls.from_api(item) for item in data]
-        return instances
+        return summary, instances
 
     @classmethod
     def by_income_level(cls, income_level, **kwargs):
         """
-        Returns a list of class instances with a given income_level
+        Returns a tuple of a dictionary summary, and a list of class instances with a given income_level
         """
         url = '%s/countries' % domain
         kwargs.setdefault('incomeLevel', income_level.id)
         summary, data = _request(url, parameters=kwargs)
         instances = [cls.from_api(item) for item in data]
-        return instances
+        return summary, instances
 
     @classmethod
     def by_lending_type(cls, lending_type, **kwargs):
         """
-        Returns a list of class instances with a given lending_type
+        Returns a tuple of a dictionary summary, and a list of class instances with a given lending_type
         """
         url = '%s/countries' % domain
         kwargs.setdefault('lendingType', lending_type.id)
         summary, data = _request(url, parameters=kwargs)
         instances = [cls.from_api(item) for item in data]
-        return instances
-
+        return summary, instances
 
 class CountryIndicator(object):
+    """
+    An instance of a measure of a country for a given year
+
+    See https://datahelpdesk.worldbank.org/knowledgebase/articles/898599-api-indicator-queries
+    """
     __slots__ = ('indicator', 'country', 'year', 'value', 'decimal')
 
     def __init__(self, indicator, country, year, value, decimal):
@@ -409,9 +415,7 @@ class CountryIndicator(object):
         return str(self.value)
 
     def __repr__(self):
-        return '<%s %s country=%s, indicator=%s, year=%s, value=%s>' %  \
-            (self.__class__.__name__, id(self), self.country,
-                self.indicator, self.year, self.value)
+        return '<%s %s country=%s, indicator=%s, year=%s, value=%s>' % (self.__class__.__name__, id(self), self.country, self.indicator, self.year, self.value)
 
     @classmethod
     def from_api(cls, data):
@@ -420,7 +424,8 @@ class CountryIndicator(object):
         """
         country = data['country']
         indicator_data = data['indicator']
-        indicator = Indicator.get(indicator_data['id'])[0]
+        indicator_summary, indicators = Indicator.get(indicator_data['id'])
+        indicator = indicators[0]
         year = data['date']
         value = data['value']
         if value:
@@ -431,7 +436,7 @@ class CountryIndicator(object):
     @classmethod
     def get(cls, indicator, country=None, **kwargs):
         """
-        Returns a list of class instances
+        Returns a tuple of a dictionary summary, and a list of class instances
         """
         start = kwargs.pop('start', None)
         end = kwargs.pop('end', None)
@@ -443,17 +448,20 @@ class CountryIndicator(object):
             iso_code = country.iso_code
         else:
             iso_code = 'all'
-        url = '%s/countries/%s/indicators/%s' % \
-            (domain, iso_code, indicator.id)
+        url = '%s/countries/%s/indicators/%s' % (domain, iso_code, indicator.id)
         summary, data = _request(url, parameters=kwargs)
         instances = [cls.from_api(item) for item in data]
         if country:
             for instance in instances:
                 instance.country = country
-        return instances
-
+        return summary, instances
 
 class Topic(object):
+    """
+    A Topic that a given indicator may have
+
+    See https://datahelpdesk.worldbank.org/knowledgebase/articles/898611-api-topic-queries
+    """
     __slots__ = ('id', 'name', 'note')
 
     def __init__(self, id, name, note):
@@ -465,8 +473,7 @@ class Topic(object):
         return self.id
 
     def __repr__(self):
-        return '<%s %s id=%s, name=%s>' % \
-            (self.__class__.__name__, id(self), self.id, self.name)
+        return '<%s %s id=%s, name=%s>' % (self.__class__.__name__, id(self), self.id, self.name)
 
     @classmethod
     def from_api(cls, data):
@@ -481,17 +488,18 @@ class Topic(object):
     @classmethod
     def get(cls, **kwargs):
         """
-        Returns a list of class instances
+        Returns a tuple of a dictionary summary, and a list of class instances
         """
         url = '%s/topics/' % domain
         summary, data = _request(url, parameters=kwargs)
         instances = [cls.from_api(item) for item in data]
-        return instances
-
+        return summary, instances
 
 class Catalog(object):
     """
     A Dataset in the World Bank Open Data Datalog
+
+    See https://datahelpdesk.worldbank.org/knowledgebase/articles/902049-data-catalog-api
     """
 
     def __init__(self, id, **kwargs):
@@ -520,10 +528,10 @@ class Catalog(object):
     @classmethod
     def get(cls, catalog=None, field=[], **kwargs):
         """
-        Returns a list of class instances
+        Returns a dictionary with a list of class instances
         """
         field = ';'.join(field)
-        url = '%s/v2/datacatalog/' % domain
+        url = '%s/datacatalog/' % domain
         if catalog:
             url = '%s/%s' % (url, catalog.id)
         if field:
@@ -543,15 +551,17 @@ class Catalog(object):
         return instances
 
 if __name__ == '__main__':
-    countries = Country.get()
-    lending_types = LendingType.get()
-    topics = Topic.get()
-    sources = Source.get()
-    income_levels = IncomeLevel.get()
-    indicators = Indicator.get()
-    Country.by_income_level(income_level=income_levels[0])
-    Country.by_lending_type(lending_types[0])
-    Indicator.by_source(sources[0])
-    Indicator.by_topic(topics[0])
-    CountryIndicator.get(indicators[0])
-    Catalog.get()
+    summary, indicators = Indicator.get()
+    summary, country_indicators = (CountryIndicator.get(indicators[0]))
+    summary, countries = Country.get()
+    summary, lending_types = LendingType.get()
+    summary, topics = Topic.get()
+    summary, sources = Source.get()
+    summary, income_levels =  IncomeLevel.get()
+    summary, indicators = Indicator.get()
+    summary, countries =Country.by_income_level(income_level=income_levels[0])
+    summary, country = Country.by_lending_type(lending_types[0])
+    summary, indicators = Indicator.by_source(sources[0])
+    summary, indicators = Indicator.by_topic(topics[0])
+    summary, countrindicators = CountryIndicator.get(indicators[0])
+    catalog = Catalog.get()
