@@ -12,15 +12,17 @@ try:
     # Python 3
     from urllib.request import Request, urlopen
     from urllib.parse import urlencode
-except:
+except ImportError:
     # Python 2
     from urllib2 import Request, urlopen
     from urllib import urlencode
 
 logger = logging.getLogger(__name__)
 
+
 def memoize(obj):
     cache = obj.cache = {}
+
     @functools.wraps(obj)
     def memoizer(*args, **kwargs):
         key = str(args) + str(kwargs)
@@ -28,6 +30,7 @@ def memoize(obj):
             cache[key] = obj(*args, **kwargs)
         return cache[key]
     return memoizer
+
 
 def _request(url, **kwargs):
     headers = kwargs.get('headers', {})
@@ -54,10 +57,13 @@ def _request(url, **kwargs):
         logger.error(e)
         raise
     raw_response_data = response.read().decode("utf-8")
+    logger.debug(raw_response_data)
     response_data = json.loads(raw_response_data)
     return response_data
 
+
 domain = "https://api.worldbank.org/v2"
+
 
 class Source(object):
     """
@@ -101,9 +107,9 @@ class Source(object):
         instances = [cls.from_api(item) for item in data]
         return summary, instances
 
+
 class IncomeLevel(object):
     """
-
     See https://datahelpdesk.worldbank.org/knowledgebase/articles/898596-api-income-level-queries
     """
     __slots__ = ('id', 'name')
@@ -137,9 +143,9 @@ class IncomeLevel(object):
         instances = [cls.from_api(item) for item in data]
         return summary, instances
 
+
 class LendingType(object):
     """
-
     See https://datahelpdesk.worldbank.org/knowledgebase/articles/898608-api-lending-type-queries
     """
     __slots__ = ('id', 'name')
@@ -173,10 +179,10 @@ class LendingType(object):
         instances = [cls.from_api(item) for item in data]
         return summary, instances
 
+
 class Indicator(object):
     """
     An Indicator is dimension that can be measured for a country
-
     See https://datahelpdesk.worldbank.org/knowledgebase/articles/898599-api-indicator-queries
     """
     __slots__ = ('id', 'name', 'source', 'topics', 'source_note', 'source_organization')
@@ -207,10 +213,12 @@ class Indicator(object):
         source_note = data.get('sourceNote', None)
         source_organization = data.get('sourceOrganization', None).encode('ascii', 'ignore')
         source = Source.from_api(source_data)
-        if topic_data and 'id' in topic_data:
-            topics = [Topic.from_api(topic) for topic in topic_data]
-        else:
-            topics = []
+        topics = []
+        for item in topic_data:
+            if 'id' not in item:
+                continue
+            topic = Topic.from_api(item)
+            topics.append(topic)
         return cls(indicator_id, name, source, topics, source_note, source_organization)
 
     @classmethod
@@ -247,10 +255,10 @@ class Indicator(object):
         instances = [cls.from_api(item) for item in data]
         return summary, instances
 
+
 class Region(object):
     """
     A region is a property of a Country
-
     See https://datahelpdesk.worldbank.org/knowledgebase/articles/898590-api-country-queries
     """
     __slots__ = ('id', 'code', 'name')
@@ -276,10 +284,10 @@ class Region(object):
         name = data['value']
         return cls(id, code, name)
 
+
 class AdminRegion(Region):
     """
     An admin region is a property of a Country
-
     See https://datahelpdesk.worldbank.org/knowledgebase/articles/898590-api-country-queries
     """
 
@@ -316,10 +324,10 @@ class City(object):
         longitude = data['longitude']
         return cls(name, latitude, longitude)
 
+
 class Country(object):
     """
     A country
-
     See https://datahelpdesk.worldbank.org/knowledgebase/articles/898590-api-country-queries
     """
     __slots__ = ('id', 'name', 'iso_code', 'region', 'admin_region', 'income_level', 'lending_type', 'capital')
@@ -396,10 +404,10 @@ class Country(object):
         instances = [cls.from_api(item) for item in data]
         return summary, instances
 
+
 class CountryIndicator(object):
     """
     An instance of a measure of a country for a given year
-
     See https://datahelpdesk.worldbank.org/knowledgebase/articles/898599-api-indicator-queries
     """
     __slots__ = ('indicator', 'country', 'year', 'value', 'decimal')
@@ -456,10 +464,10 @@ class CountryIndicator(object):
                 instance.country = country
         return summary, instances
 
+
 class Topic(object):
     """
     A Topic that a given indicator may have
-
     See https://datahelpdesk.worldbank.org/knowledgebase/articles/898611-api-topic-queries
     """
     __slots__ = ('id', 'name', 'note')
@@ -494,6 +502,7 @@ class Topic(object):
         summary, data = _request(url, parameters=kwargs)
         instances = [cls.from_api(item) for item in data]
         return summary, instances
+
 
 class Catalog(object):
     """
@@ -550,18 +559,19 @@ class Catalog(object):
         instances = [cls.from_api(item) for item in data['datacatalog']]
         return instances
 
+
 if __name__ == '__main__':
     summary, indicators = Indicator.get()
-    summary, country_indicators = (CountryIndicator.get(indicators[0]))
+    summary, country_indicators = CountryIndicator.get(indicators[0])
     summary, countries = Country.get()
     summary, lending_types = LendingType.get()
     summary, topics = Topic.get()
     summary, sources = Source.get()
-    summary, income_levels =  IncomeLevel.get()
+    summary, income_levels = IncomeLevel.get()
     summary, indicators = Indicator.get()
-    summary, countries =Country.by_income_level(income_level=income_levels[0])
+    summary, countries = Country.by_income_level(income_level=income_levels[0])
     summary, country = Country.by_lending_type(lending_types[0])
     summary, indicators = Indicator.by_source(sources[0])
     summary, indicators = Indicator.by_topic(topics[0])
-    summary, countrindicators = CountryIndicator.get(indicators[0])
+    summary, countryindicators = CountryIndicator.get(indicators[0])
     catalog = Catalog.get()
