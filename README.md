@@ -27,7 +27,7 @@ The Data Catalog API provides programmatic access to the list of datasets in the
 See [World Bank Catalog API](https://datahelpdesk.worldbank.org/knowledgebase/articles/902049-data-catalog-api) for more details
 
 ### City
-A city in a [country](#country). A `country's` `capital` is a City instance
+A city in a [country](#country). A `country`'s `capital` is a `City` instance
 
 #### Instance Attributes
 - name
