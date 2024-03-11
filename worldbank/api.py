@@ -675,78 +675,6 @@ class Topic(object):
         return summary, instances
 
 
-class Catalog(object):
-    """
-    A Dataset in the World Bank Open Data Datalog
-
-    Attributes:
-        id (str):
-        metatypes (list):
-
-    See https://datahelpdesk.worldbank.org/knowledgebase/articles/902049-data-catalog-api
-    """
-
-    def __init__(self, id, metatypes):
-        self.id = id
-        self.metatypes = metatypes
-
-    def __str__(self):
-        return self.id
-
-    def __repr__(self):
-        return '<%s %s id=%s>' % (self.__class__.__name__, id(self), self.id)
-
-    @classmethod
-    def from_api(cls, data):
-        """
-        Returns a class instance from API data
-        """
-        catalog_id = data['id']
-        metatypes = data['metatype']
-        return cls(catalog_id, metatypes)
-
-    @classmethod
-    def get(cls, catalog=None, field=[], **kwargs):
-        """
-        Arguments:
-            catalog (str, optional): id of the desired Catalog
-            field (list|tuple|set):  desired fields
-        Keyword Arguments:
-            page (int, optional):  The page number to get, defaults to 1.
-            per_page (int, optional):  The number of items to fetch in each page, defaults to 50.
-
-        Returns
-            list: instances matching the query
-        """
-        field = ';'.join(field)
-        url = '%s/datacatalog/' % domain
-        if catalog:
-            url = '%s/%s' % (url, catalog.id)
-        if field:
-            url = '%s/metatypes/%s' % (url, field)
-        data = _request(url, parameters=kwargs)
-        instances = [cls.from_api(item) for item in data['datacatalog']]
-        return instances
-
-    @classmethod
-    def search(cls, query, **kwargs):
-        """
-        Arguments:
-            query (str):  search query
-
-        Keyword Arguments:
-            page (int, optional):  The page number to get, defaults to 1.
-            per_page (int, optional):  The number of items to fetch in each page, defaults to 50.
-
-        Returns
-            list: instances matching the query
-        """
-        url = '%s/v2/datacatalog/search/%s' % (domain, query)
-        data = _request(url, parameters=kwargs)
-        instances = [cls.from_api(item) for item in data['datacatalog']]
-        return instances
-
-
 if __name__ == '__main__':
     summary, indicators = Indicator.get()
     summary, country_indicators = CountryIndicator.get(indicators[0])
@@ -761,4 +689,3 @@ if __name__ == '__main__':
     summary, indicators = Indicator.by_source(sources[0])
     summary, indicators = Indicator.by_topic(topics[0])
     summary, countryindicators = CountryIndicator.get(indicators[0])
-    catalog = Catalog.get()
